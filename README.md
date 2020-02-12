@@ -55,9 +55,10 @@ For Lambda:
 
 For Security Group:
 	1. In the AWS console go to EC2 service
-	2. In the EC2 Dashboard, go to under "Network & Security", Select "Security Group" 
+	2. In the EC2 Dashboard, under "Network & Security", Select "Security Group" 
 	3. Locate the security group called "PTA-AWS-Solution-SG"
 	4. Go to the "Outbound" tab and update the destination IP for PTA tcp port rule to the appropriate value.
+
 
 
 
