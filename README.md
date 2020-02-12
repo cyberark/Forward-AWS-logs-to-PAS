@@ -48,8 +48,17 @@ Detect compromised privileged IAM accounts
 
 ## Manual procedure to change the PTA IP after the solution is deployed 
 
-- Lambda : In AWS console -> go to Lambda service -> Look for Lambda which contains "SNSToPTAFunction" in its name -> Update "PTAIP" environment variable as you wish
-- Security Group : In AWS console -> go to EC2 service -> Choose "Security Group" under "Network & Security" in EC2 Dashboard -> look for security group called "PTA-AWS-Solution-SG" -> Go to "Outbound" tab -> Update destination IP for PTA tcp port rule as you wish
+For Lambda:
+1.	1. In the AWS console, go to Lambda service.
+2.	2. Locate the Lambda which contains "SNSToPTAFunction" in its name
+3.	3. Update the  "PTAIP" environment variable to the appropriate value.
+
+For Security Group:
+1.	1. In the AWS console go to EC2 service
+2.	2. In the in EC2 Dashboard, under "Network & Security", Select "Security Group" 
+3.	3. Locate the security group called "PTA-AWS-Solution-SG"
+4.	4. Go to the "Outbound" tab and update the destination IP for PTA tcp port rule to the appropriate value
+
 
 
 
