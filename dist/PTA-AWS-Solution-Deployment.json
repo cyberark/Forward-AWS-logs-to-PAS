@@ -279,7 +279,7 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Handler": "index.handler",
-                "Runtime": "nodejs12.x",
+                "Runtime": "nodejs20.x",
                 "Code": {
                     "S3Bucket": {
                         "Ref": "LambdasBucket"
@@ -420,7 +420,7 @@
             "Type": "AWS::Lambda::Function",
             "Properties": {
                 "Handler": "lambda_function.lambda_handler",
-                "Runtime": "python3.6",
+                "Runtime": "python3.9",
                 "Code": {
                     "S3Bucket": {
                         "Ref": "LambdasBucket"
