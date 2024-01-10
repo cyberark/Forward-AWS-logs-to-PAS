@@ -16,7 +16,7 @@ def publish_record(record):
 def lambda_handler(event, context):
     print(json.dumps(event))
     
-    if not "s3" in ['Records'][0]:
+    if not "s3" in event['Records'][0]:
         return {"message": "Event doesn't have s3 data"}
         
     src_bucket = event['Records'][0]['s3']['bucket']['name']
