@@ -4,17 +4,20 @@ import zlib
 import os
 import gzip
 import io
+import logging
 
 # AWS SDK clients for Python
 s3 = boto3.client('s3')
 sns = boto3.client('sns', region_name=os.environ['SNSREGION'])
+logger = logging.getLogger()
+logger.setLevel("INFO")
 
 def publish_record(record):
-    print('Publishing notification:', record)
+    logger.info('Publishing notification: ' + record)
     sns.publish(Message=json.dumps(record), TopicArn=os.environ['SNSTOPICARN'])
 
 def lambda_handler(event, context):
-    print(json.dumps(event))
+    logger.trace(json.dumps(event))
     
     if not "s3" in event['Records'][0]:
         return {"message": "Event doesn't have s3 data"}
@@ -24,26 +27,26 @@ def lambda_handler(event, context):
     
     try:
         # Fetching compressed log from S3
-        print('Fetching compressed log from S3...')
+        logger.info('Fetching compressed log from S3...')
         response = s3.get_object(Bucket=src_bucket, Key=src_key)
         compressed_data = response['Body'].read()
 
         # Uncompressing log
-        print("Decompressing log...")
+        logger.info("Decompressing log...")
         with gzip.GzipFile(fileobj=io.BytesIO(compressed_data)) as gz:
             decompressed_data = gz.read()
 
         # Filtering log
-        print('Filtering log...')
+        logger.info('Filtering log...')
         json_data = decompressed_data.decode('utf-8')
-        print('CloudTrail JSON from S3:', json_data)
+        logger.debug('CloudTrail JSON from S3: ' + json_data)
         records = json.loads(json_data)
         
         if "Records" in records:
             matching_records = [record for record in records['Records'] if 'accessKeyId' in record.get('userIdentity', {})]
     
             # Publishing notifications
-            print(f'Publishing {len(matching_records)} notification(s)...')
+            logger.info(f'Publishing {len(matching_records)} notification(s)...')
             for record in matching_records:
                 publish_record(record)
                 
@@ -52,9 +55,9 @@ def lambda_handler(event, context):
             if 'accessKeyId' in record.get('userIdentity', {}):
                 publish_record(record)
             
-        print('Successfully published all notifications.')
+        logger.info('Successfully published all notifications.')
         return {"message": "Success"}
             
     except Exception as e:
-        print(f'Error: {str(e)}')
+        logger.error(f'Error: {str(e)}')
         return {"message": "Error"}
