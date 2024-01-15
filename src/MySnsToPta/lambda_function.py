@@ -47,9 +47,6 @@ def lambda_handler(event, context):
     }
 
 def parse_json(record):
-    #data = json.load(jsonData)
-    #print (data)
-    #for record in data["Records"]:
     logger.info("Record data: {0}".format(record))
     if (record["EventSource"] == 'aws:sns'):
         logger.info("The event source is aws:sns")
