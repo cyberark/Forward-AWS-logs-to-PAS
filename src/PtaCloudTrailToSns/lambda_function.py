@@ -17,7 +17,7 @@ def publish_record(record):
     sns.publish(Message=json.dumps(record), TopicArn=os.environ['SNSTOPICARN'])
 
 def lambda_handler(event, context):
-    logger.trace(json.dumps(event))
+    logger.debug(json.dumps(event))
     
     if not "s3" in event['Records'][0]:
         return {"message": "Event doesn't have s3 data"}
