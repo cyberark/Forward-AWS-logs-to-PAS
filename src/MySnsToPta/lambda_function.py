@@ -20,7 +20,7 @@ def sendData(sock, msg):
 def lambda_handler(event, context):
     tcp_port = int(TCP_PORT) 
     sock = 0
-    logger.trace(event);
+    logger.debug(event);
     for record in event["Records"]: 
         
         logger.info("Connecting to: " + TCP_IP + " Port: " + str(TCP_PORT))
@@ -33,7 +33,7 @@ def lambda_handler(event, context):
             sock.connect((TCP_IP, tcp_port))
             b_event = str.encode(message)
             sendData(sock, b_event)
-            logger.trace(b_event)
+            logger.debug(b_event)
             
         except Exception as e:
             logger.error('exception, connection failure: ' + str(e))
