@@ -1,0 +1,16 @@
+{
+  "name": "pta-cloud-trail-to-sns",
+  "version": "1.0.0",
+  "description": "Detect unmanaged Access Keys and Passwords for IAM accounts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vicky Vatury",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.5",
+    "aws-sdk": "^2.1642.0",
+    "lodash": "^4.17.21"
+  }
+}
