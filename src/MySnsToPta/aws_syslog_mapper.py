@@ -1,8 +1,9 @@
+from __future__ import annotations
 import json
-from typing import Any, Dict, Optional, Tuple
-
+from typing import Any, Dict, Optional, Tuple, Union
 
 def _g(obj: Dict[str, Any], path: str, *, default: Any = None) -> Any:
+    """Safe getter for dotted paths."""
     cur: Any = obj
     for part in path.split("."):
         if isinstance(cur, dict) and part in cur:
@@ -11,12 +12,11 @@ def _g(obj: Dict[str, Any], path: str, *, default: Any = None) -> Any:
             return default
     return cur
 
-
 def _pick_event_time(ev: Dict[str, Any]) -> Optional[str]:
     return _g(ev, "detail.eventTime") or ev.get("time")
 
-
 def _require_strings(payload: Dict[str, Any], paths: Tuple[str, ...]) -> Tuple[bool, str]:
+    """Validates that each dotted path exists and is a non-empty string."""
     missing = []
     wrong_type = []
     for p in paths:
@@ -36,8 +36,8 @@ def _require_strings(payload: Dict[str, Any], paths: Tuple[str, ...]) -> Tuple[b
         return False, "; ".join(parts)
     return True, ""
 
-
 def _detect_builder(ev: Dict[str, Any]) -> str:
+    """Returns 'access_key' or 'password'."""
     event_name = _g(ev, "detail.eventName")
     console_login = _g(ev, "detail.responseElements.ConsoleLogin")
     access_key_id = _g(ev, "detail.userIdentity.accessKeyId")
@@ -47,7 +47,6 @@ def _detect_builder(ev: Dict[str, Any]) -> str:
     if isinstance(access_key_id, str) and access_key_id.strip():
         return "access_key"
     raise ValueError("Unsupported event type for these builders")
-
 
 def map_event_to_java_source(event: Dict[str, Any]) -> Dict[str, Any]:
     builder_type = _detect_builder(event)
@@ -104,8 +103,7 @@ def map_event_to_java_source(event: Dict[str, Any]) -> Dict[str, Any]:
 
     return mapped
 
-
-def normalize_aws_syslog(syslog: str | Dict[str, Any]) -> Dict[str, Any]:
+def normalize_aws_syslog(syslog: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
     if isinstance(syslog, str):
         try:
             event = json.loads(syslog)
