@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, Optional, Tuple, Union
 
+# ---------- Flexible getters ----------
 def _g(obj: Dict[str, Any], path: str, *, default: Any = None) -> Any:
     """Safe getter for dotted paths."""
     cur: Any = obj
@@ -12,9 +13,39 @@ def _g(obj: Dict[str, Any], path: str, *, default: Any = None) -> Any:
             return default
     return cur
 
-def _pick_event_time(ev: Dict[str, Any]) -> Optional[str]:
-    return _g(ev, "detail.eventTime") or ev.get("time")
+def _get_event_name(ev):
+    return _g(ev, "detail.eventName") or ev.get("eventName")
 
+def _get_console_login(ev):
+    return _g(ev, "detail.responseElements.ConsoleLogin") or \
+           _g(ev, "responseElements.ConsoleLogin")
+
+def _get_access_key_id(ev):
+    return _g(ev, "detail.userIdentity.accessKeyId") or \
+           _g(ev, "userIdentity.accessKeyId")
+
+def _get_account_id(ev):
+    return _g(ev, "detail.userIdentity.accountId") or \
+           _g(ev, "userIdentity.accountId")
+
+def _get_user_name(ev):
+    return _g(ev, "detail.userIdentity.userName") or \
+           _g(ev, "userIdentity.userName")
+
+def _get_event_time(ev):
+    return _g(ev, "detail.eventTime") or ev.get("eventTime") or ev.get("time")
+
+def _get_event_source(ev):
+    return _g(ev, "detail.eventSource") or ev.get("eventSource")
+
+def _get_source_ip(ev):
+    return _g(ev, "detail.sourceIPAddress") or ev.get("sourceIPAddress")
+
+def _get_event_id(ev):
+    return _g(ev, "detail.eventID") or ev.get("eventID")
+
+
+# ---------- Validation ----------
 def _require_strings(payload: Dict[str, Any], paths: Tuple[str, ...]) -> Tuple[bool, str]:
     """Validates that each dotted path exists and is a non-empty string."""
     missing = []
@@ -30,17 +61,17 @@ def _require_strings(payload: Dict[str, Any], paths: Tuple[str, ...]) -> Tuple[b
         if missing:
             parts.append(f"missing: {', '.join(missing)}")
         if wrong_type:
-            parts.append(
-                "wrong types: " + ", ".join(f"{p}={t}" for p, t in wrong_type)
-            )
+            parts.append("wrong types: " + ", ".join(f"{p}={t}" for p, t in wrong_type))
         return False, "; ".join(parts)
     return True, ""
 
+
+# ---------- Builder detection ----------
 def _detect_builder(ev: Dict[str, Any]) -> str:
     """Returns 'access_key' or 'password'."""
-    event_name = _g(ev, "detail.eventName")
-    console_login = _g(ev, "detail.responseElements.ConsoleLogin")
-    access_key_id = _g(ev, "detail.userIdentity.accessKeyId")
+    event_name = _get_event_name(ev)
+    console_login = _get_console_login(ev)
+    access_key_id = _get_access_key_id(ev)
 
     if event_name == "ConsoleLogin" and isinstance(console_login, str):
         return "password"
@@ -48,23 +79,24 @@ def _detect_builder(ev: Dict[str, Any]) -> str:
         return "access_key"
     raise ValueError("Unsupported event type for these builders")
 
+
+# ---------- Main mapping ----------
 def map_event_to_java_source(event: Dict[str, Any]) -> Dict[str, Any]:
     builder_type = _detect_builder(event)
 
-    event_time = _pick_event_time(event)
     mapped: Dict[str, Any] = {
-        "eventTime": event_time,
-        "eventSource": _g(event, "detail.eventSource"),
-        "eventName": _g(event, "detail.eventName"),
-        "sourceIPAddress": _g(event, "detail.sourceIPAddress"),
-        "eventID": _g(event, "detail.eventID"),
+        "eventTime": _get_event_time(event),
+        "eventSource": _get_event_source(event),
+        "eventName": _get_event_name(event),
+        "sourceIPAddress": _get_source_ip(event),
+        "eventID": _get_event_id(event),
         "userIdentity": {
-            "accountId": _g(event, "detail.userIdentity.accountId"),
-            "userName": _g(event, "detail.userIdentity.userName"),
-            "accessKeyId": _g(event, "detail.userIdentity.accessKeyId"),
+            "accountId": _get_account_id(event),
+            "userName": _get_user_name(event),
+            "accessKeyId": _get_access_key_id(event),
         },
         "responseElements": {
-            "ConsoleLogin": _g(event, "detail.responseElements.ConsoleLogin")
+            "ConsoleLogin": _get_console_login(event)
         },
     }
 
@@ -102,6 +134,7 @@ def map_event_to_java_source(event: Dict[str, Any]) -> Dict[str, Any]:
         raise ValueError(f"Mandatory field validation failed: {err}")
 
     return mapped
+
 
 def normalize_aws_syslog(syslog: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
     if isinstance(syslog, str):
